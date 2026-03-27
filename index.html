@@ -662,12 +662,10 @@ async function apiGet(action) {
   return res.json();
 }
 
+// Route saves through GET to avoid CORS preflight issues with POST
 async function apiPost(action, data) {
-  const res = await fetch(SHEETS_URL, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ action, ...data }),
-  });
+  const encoded = encodeURIComponent(JSON.stringify(data));
+  const res = await fetch(`${SHEETS_URL}?action=${action}&data=${encoded}`);
   return res.json();
 }
 
@@ -693,7 +691,11 @@ async function loadAllData() {
       apiGet('getLog'),
       apiGet('getDailyMetrics'),
     ]);
-    CACHE.masterPlan  = mp.rows        || [];
+    CACHE.masterPlan  = (mp.rows || []).map(r => ({
+      ...r,
+      targetReps: String(r.targetReps || ''),
+      setNum:     String(r.setNum || ''),
+    }));
     CACHE.library     = lib.library    || {};
     CACHE.workoutLog  = (log.rows      || []).map(r => ({...r, dateObj: new Date(r.date+'T12:00:00')}));
     CACHE.metrics     = metrics.rows   || [];
@@ -894,13 +896,13 @@ async function ciSave() {
   try {
     // Weight → today's entry
     if (hasW) {
-      await apiPost('saveDailyLog', { entry: { date: todayStr(), weight } });
+      await apiPost('saveDailyLog', { date: todayStr(), weight });
     }
     // Cals/steps/notes → yesterday's entry
     const yf = {};
     if (hasC) yf.cals=cals; if (hasS) yf.steps=steps; if (hasN) yf.notes=notes;
     if (Object.keys(yf).length) {
-      await apiPost('saveDailyLog', { entry: { date: yesterdayStr(), ...yf } });
+      await apiPost('saveDailyLog', { date: yesterdayStr(), ...yf });
     }
 
     // Refresh cache
@@ -1011,8 +1013,11 @@ function woBuildBlocks(rows) {
 
 function woGetPrev(exercise, setNum) {
   const log = getWorkoutLog();
-  const matches = log.filter(r=>r.exercise===exercise&&String(r.setNum)===String(setNum)).sort((a,b)=>b.date.localeCompare(a.date));
-  return matches.length ? {weight:matches[0].weight, reps:matches[0].reps} : null;
+  const exNorm = exercise.trim().toLowerCase();
+  const matches = log
+    .filter(r => r.exercise.trim().toLowerCase() === exNorm && String(r.setNum) === String(setNum))
+    .sort((a,b) => b.date.localeCompare(a.date));
+  return matches.length ? {weight: matches[0].weight, reps: matches[0].reps} : null;
 }
 
 function woRenderStandard(block) {
