@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sports Day Betting</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RESET & TOKENS
+============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #0b0e17;
+  --surface:   #111520;
+  --card:      #161b2e;
+  --card-hi:   #1a2035;
+  --border:    #1e2640;
+  --border-hi: #2a3660;
+  --gold:      #f5c542;
+  --gold-dim:  rgba(245,197,66,0.12);
+  --green:     #22d37a;
+  --green-dim: rgba(34,211,122,0.10);
+  --red:       #f06060;
+  --red-dim:   rgba(240,96,96,0.10);
+  --blue:      #3b6ef6;
+  --blue-dim:  rgba(59,110,246,0.12);
+  --purple:    #a78bfa;
+  --purple-dim:rgba(167,139,250,0.15);
+  --text-pri:  #eef0f8;
+  --text-sec:  #7c85a8;
+  --text-dim:  #3d4566;
+  --mono:      'DM Mono', monospace;
+  --display:   'Syne', sans-serif;
+  --r:         14px;
+  --r-sm:      8px;
+}
+html, body {
+  background: var(--bg); color: var(--text-pri);
+  font-family: var(--mono); min-height: 100vh;
+  -webkit-font-smoothing: antialiased; overscroll-behavior: none;
+}
+.screen { display: none; max-width: 460px; margin: 0 auto; padding: 0 0 90px; min-height: 100vh; }
+.screen.active { display: block; }
+
+.header { padding: 44px 16px 14px; }
+.header-eyebrow { font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--gold); font-weight: 500; margin-bottom: 4px; }
+.header-title { font-family: var(--display); font-size: 26px; font-weight: 800;
+  letter-spacing: -.02em; line-height: 1.1; }
+.header-sub { font-size: 11px; color: var(--text-sec); margin-top: 5px; }
+
+.section-label { font-size: 9px; font-weight: 500; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--text-dim); padding: 14px 16px 8px; }
+
+.card { margin: 0 12px 10px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden; }
+.card-header { display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 10px; border-bottom: 1px solid var(--border); gap: 8px; }
+.card-title { font-family: var(--display); font-size: 15px; font-weight: 700; color: var(--text-pri); }
+.card-meta { font-size: 10px; color: var(--text-dim); }
+.card-body { padding: 12px 16px 14px; }
+
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-sec); margin-bottom: 5px; }
+.field input[type=text], .field input[type=number], .field select, .field textarea {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 10px 12px; font-family: var(--mono); font-size: 14px; color: var(--text-pri); outline: none;
+  transition: border-color .15s; appearance: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); }
+.field textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.field-row { display: flex; gap: 8px; }
+.field-row .field { flex: 1; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--gold); border: none; border-radius: var(--r-sm); padding: 10px 16px;
+  font-family: var(--display); font-size: 13px; font-weight: 700; color: #241c02; cursor: pointer;
+  transition: opacity .15s, transform .1s; -webkit-tap-highlight-color: transparent; }
+.btn:active { opacity: .82; transform: scale(.98); }
+.btn:disabled { background: var(--border); color: var(--text-dim); cursor: default; }
+.btn-full { width: 100%; }
+.btn-ghost { background: var(--surface); border: 1px solid var(--border); color: var(--text-sec); }
+.btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(240,96,96,.3); }
+.btn-sm { padding: 6px 10px; font-size: 11px; }
+
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 500;
+  letter-spacing: .08em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; }
+.pill-gold  { background: var(--gold-dim); color: var(--gold); }
+.pill-green { background: var(--green-dim); color: var(--green); }
+.pill-red   { background: var(--red-dim); color: var(--red); }
+.pill-dim   { background: var(--border); color: var(--text-dim); }
+
+.house-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.house-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-pri); }
+
+.list-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border); }
+.list-row:first-child { border-top: none; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .name { font-size: 13px; color: var(--text-pri); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-row .sub { font-size: 10px; color: var(--text-dim); }
+
+.tab-toggle { display: flex; gap: 6px; padding: 0 0 10px; }
+.tab-toggle button { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 8px 4px; font-family: var(--mono); font-size: 11px; color: var(--text-sec); cursor: pointer; }
+.tab-toggle button.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+.search-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 8px 10px; font-family: var(--mono); font-size: 13px; color: var(--text-pri); outline: none; margin-bottom: 8px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chip { font-size: 10px; padding: 4px 9px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-sec); cursor: pointer; user-select: none; }
+.chip.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+.checklist { max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); }
+.checklist label { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 12px;
+  border-top: 1px solid var(--border); cursor: pointer; }
+.checklist label:first-child { border-top: none; }
+.checklist input { flex-shrink: 0; }
+
+.scroll-list { max-height: 320px; overflow-y: auto; }
+
+.pool-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+.pool-row .pool-label { flex: 1; font-size: 12px; color: var(--text-pri); display: flex; align-items: center; gap: 6px; }
+.pool-bar-bg { flex-basis: 90px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.pool-bar-fill { height: 100%; background: var(--gold); border-radius: 3px; }
+.pool-amt { font-family: var(--display); font-size: 12px; font-weight: 700; color: var(--text-pri); min-width: 56px; text-align: right; }
+.pool-odds { font-size: 10px; color: var(--text-dim); min-width: 40px; text-align: right; }
+
+.status-msg { text-align: center; font-size: 12px; color: var(--text-dim); padding: 8px 24px 0; min-height: 18px; }
+.status-msg.err { color: var(--red); }
+
+table.ledger { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.ledger th { text-align: left; font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim); padding: 6px 4px; border-bottom: 1px solid var(--border); }
+table.ledger td { padding: 7px 4px; border-bottom: 1px solid var(--border); color: var(--text-pri); }
+table.ledger td.num { text-align: right; font-family: var(--display); font-weight: 700; }
+.net-pos { color: var(--green); }
+.net-neg { color: var(--red); }
+
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface);
+  border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 22px; z-index: 100; }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 9px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; padding: 4px 14px;
+  -webkit-tap-highlight-color: transparent; user-select: none; }
+.nav-item.active { color: var(--gold); }
+
+.toast { position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--green); color: #0a2a1a; font-family: var(--display); font-size: 13px; font-weight: 700;
+  padding: 11px 22px; border-radius: 40px; white-space: nowrap; transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+  opacity: 0; z-index: 999; pointer-events: none; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.err { background: var(--red); color: #2a0a0a; }
+
+.empty-state { text-align: center; padding: 40px 24px; color: var(--text-dim); }
+.empty-state h3 { font-family: var(--display); font-size: 16px; font-weight: 700; color: var(--text-sec); margin-bottom: 6px; }
+.empty-state p { font-size: 12px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SCREEN 1 — SETUP
+============================================================ -->
+<div id="screen-setup" class="screen active">
+  <div class="header">
+    <div class="header-eyebrow">Sports Day Betting</div>
+    <div class="header-title" id="event-title">Setup</div>
+    <div class="header-sub">4 houses · roster, races &amp; settings</div>
+  </div>
+
+  <div class="section-label">Event</div>
+  <div class="card">
+    <div class="card-body">
+      <div class="field-row">
+        <div class="field"><label>Event name</label><input type="text" id="set-event-name"></div>
+        <div class="field"><label>Date</label><input type="text" id="set-event-date"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Currency symbol</label><input type="text" id="set-currency" maxlength="3"></div>
+        <div class="field"><label>House rake %</label><input type="number" id="set-rake" min="0" max="100" step="1"></div>
+      </div>
+      <button class="btn btn-full" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+
+  <div class="section-label">Houses</div>
+  <div class="card"><div class="card-body" id="houses-editor"></div></div>
+
+  <div class="section-label">Kids Roster (<span id="kids-count">0</span>/90)</div>
+  <div class="card">
+    <div class="card-body">
+      <div class="field">
+        <label>Bulk import — one per line: "Name, House"</label>
+        <textarea id="kids-bulk" rows="4" placeholder="Amelia Turner, Red&#10;Oliver James, Blue"></textarea>
+      </div>
+      <button class="btn btn-full" onclick="importKids()">Import Kids</button>
+      <div class="status-msg" id="kids-import-status"></div>
+      <div class="field-row" style="margin-top:10px">
+        <div class="field"><input type="text" id="kid-add-name" placeholder="Name"></div>
+        <div class="field" style="flex:0 0 110px"><select id="kid-add-house"></select></div>
+        <button class="btn btn-sm" style="flex-shrink:0" onclick="addKid()">Add</button>
+      </div>
+      <input class="search-input" id="kids-search" placeholder="Search kids…" oninput="renderKidsList()">
+      <div class="chip-row" id="kids-house-filter"></div>
+      <div class="scroll-list" id="kids-list"></div>
+    </div>
+  </div>
+
+  <div class="section-label">Parent Race Entrants</div>
+  <div class="card">
+    <div class="card-body">
+      <div class="field">
+        <label>Bulk import — one name per line</label>
+        <textarea id="parents-bulk" rows="3" placeholder="Mr. Turner&#10;Mrs. James"></textarea>
+      </div>
+      <button class="btn btn-full" onclick="importParents()">Import Parents</button>
+      <div class="field-row" style="margin-top:10px">
+        <div class="field"><input type="text" id="parent-add-name" placeholder="Name"></div>
+        <button class="btn btn-sm" style="flex-shrink:0" onclick="addParent()">Add</button>
+      </div>
+      <div class="scroll-list" id="parents-list"></div>
+    </div>
+  </div>
+
+  <div class="section-label">Races</div>
+  <div class="card">
+    <div class="card-body">
+      <div class="field"><label>Race name</label><input type="text" id="race-name" placeholder="Year 4 Sprint"></div>
+      <div class="field">
+        <label>Type</label>
+        <select id="race-type" onchange="onRaceTypeChange()">
+          <option value="individual">Individual Kids Race</option>
+          <option value="houseTeam">House Team Race (relay / tug of war)</option>
+          <option value="parent">Parent Race</option>
+        </select>
+      </div>
+      <div id="race-entrant-picker"></div>
+      <button class="btn btn-full" onclick="addRace()" style="margin-top:8px">Add Race</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-body" id="races-list"></div></div>
+
+  <div class="section-label">Data</div>
+  <div class="card">
+    <div class="card-body">
+      <div class="field-row">
+        <button class="btn btn-ghost btn-full" onclick="exportData()">Export Backup (JSON)</button>
+      </div>
+      <div class="field-row" style="margin-top:8px">
+        <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importData(event)">
+        <button class="btn btn-ghost btn-full" onclick="document.getElementById('import-file').click()">Import Backup</button>
+      </div>
+      <div class="field-row" style="margin-top:8px">
+        <button class="btn btn-danger btn-full" onclick="resetAllData()">Reset All Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 2 — PLACE BET
+============================================================ -->
+<div id="screen-bet" class="screen">
+  <div class="header">
+    <div class="header-eyebrow">Place a Bet</div>
+    <div class="header-title">Betting Desk</div>
+    <div class="header-sub" id="bet-sub">Pick a market and stake your claim</div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="field">
+        <label>Market</label>
+        <select id="bet-race" onchange="onBetRaceChange()"></select>
+      </div>
+      <div class="tab-toggle" id="bet-kind-toggle" style="display:none"></div>
+      <div class="field">
+        <label>Selection</label>
+        <select id="bet-selection" onchange="renderPoolPreview()"></select>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Bettor name</label><input type="text" id="bet-bettor" list="bettor-names"></div>
+        <div class="field" style="flex:0 0 110px"><label>Stake</label><input type="number" id="bet-stake" min="0.01" step="0.01"></div>
+      </div>
+      <datalist id="bettor-names"></datalist>
+      <button class="btn btn-full" onclick="placeBet()">Place Bet</button>
+      <div class="status-msg" id="bet-status"></div>
+    </div>
+  </div>
+
+  <div class="section-label">Live Pool</div>
+  <div class="card"><div class="card-body" id="pool-preview"></div></div>
+
+  <div class="section-label">Recent Bets — This Market</div>
+  <div class="card"><div class="card-body" id="market-bets-list"></div></div>
+</div>
+
+<!-- ============================================================
+     SCREEN 3 — RESULTS
+============================================================ -->
+<div id="screen-results" class="screen">
+  <div class="header">
+    <div class="header-eyebrow">Declare Results</div>
+    <div class="header-title">Results Desk</div>
+    <div class="header-sub">Settling recalculates payouts every time</div>
+  </div>
+  <div id="results-list"></div>
+</div>
+
+<!-- ============================================================
+     SCREEN 4 — LEDGER
+============================================================ -->
+<div id="screen-ledger" class="screen">
+  <div class="header">
+    <div class="header-eyebrow">Ledger</div>
+    <div class="header-title">Standings</div>
+    <div class="header-sub" id="ledger-sub">—</div>
+  </div>
+  <div class="card"><div class="card-body" style="overflow-x:auto" id="ledger-table"></div></div>
+  <div class="section-label">Bet Log</div>
+  <div class="card">
+    <div class="card-body">
+      <input class="search-input" id="log-search" placeholder="Filter by bettor…" oninput="renderBetLog()">
+      <div style="overflow-x:auto"><table class="ledger" id="bet-log-table"></table></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <button class="btn btn-ghost btn-full" onclick="exportLedgerCsv()">Export Ledger (CSV)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     BOTTOM NAV
+============================================================ -->
+<nav class="bottom-nav">
+  <div class="nav-item active" data-screen="setup" onclick="navigate('setup')">
+    <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M11 2v3M11 17v3M2 11h3M17 11h3M4.5 4.5l2 2M15.5 15.5l2 2M4.5 17.5l2-2M15.5 6.5l2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <span>Setup</span>
+  </div>
+  <div class="nav-item" data-screen="bet" onclick="navigate('bet')">
+    <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><text x="11" y="15" font-size="10" text-anchor="middle" fill="currentColor" font-family="sans-serif">£</text></svg>
+    <span>Bet</span>
+  </div>
+  <div class="nav-item" data-screen="results" onclick="navigate('results')">
+    <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M5 3v16M5 3h9l-2 3 2 3H5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    <span>Results</span>
+  </div>
+  <div class="nav-item" data-screen="ledger" onclick="navigate('ledger')">
+    <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 14l3-4 3 2 3-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Ledger</span>
+  </div>
+</nav>
+
+<div class="toast" id="app-toast"></div>
+
+<script>
+'use strict';
+
+// ============================================================
+//  STATE
+// ============================================================
+const STORE_KEY = 'sportsdayBettingState_v1';
+let STATE = null;
+
+function defaultState() {
+  return {
+    settings: { eventName: 'Sports Day', eventDate: '', currency: '£', rakePct: 0 },
+    houses: [
+      { id: 'h1', name: 'Red',    color: '#f06060' },
+      { id: 'h2', name: 'Blue',   color: '#3b6ef6' },
+      { id: 'h3', name: 'Green',  color: '#22d37a' },
+      { id: 'h4', name: 'Yellow', color: '#f5c542' },
+    ],
+    kids: [],
+    parents: [],
+    races: [
+      { id: 'overall', name: 'Overall Champion', type: 'overall', entrantIds: ['h1','h2','h3','h4'], locked: true, result: null },
+    ],
+    bets: [],
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    STATE = raw ? JSON.parse(raw) : defaultState();
+    if (!STATE.races.find(r => r.id === 'overall')) {
+      STATE.races.unshift({ id: 'overall', name: 'Overall Champion', type: 'overall', entrantIds: STATE.houses.map(h=>h.id), locked: true, result: null });
+    }
+  } catch(e) { STATE = defaultState(); }
+  saveState();
+}
+function saveState() { localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); }
+
+function uid() { return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function r2(n) { return Math.round(n*100)/100; }
+function fmtMoney(n) { return STATE.settings.currency + (r2(n)).toFixed(2); }
+function houseById(id) { return STATE.houses.find(h => h.id === id); }
+function kidById(id) { return STATE.kids.find(k => k.id === id); }
+function parentById(id) { return STATE.parents.find(p => p.id === id); }
+function raceById(id) { return STATE.races.find(r => r.id === id); }
+
+function showToast(msg, isErr) {
+  const t = document.getElementById('app-toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function navigate(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  document.querySelector('[data-screen="' + screen + '"]').classList.add('active');
+  window.scrollTo(0, 0);
+  if (screen === 'setup')   renderSetup();
+  if (screen === 'bet')     renderBet();
+  if (screen === 'results') renderResults();
+  if (screen === 'ledger')  renderLedger();
+}
+
+// ============================================================
+//  SETUP — EVENT SETTINGS
+// ============================================================
+function renderSettingsForm() {
+  document.getElementById('set-event-name').value = STATE.settings.eventName;
+  document.getElementById('set-event-date').value = STATE.settings.eventDate;
+  document.getElementById('set-currency').value   = STATE.settings.currency;
+  document.getElementById('set-rake').value       = STATE.settings.rakePct;
+  document.getElementById('event-title').textContent = STATE.settings.eventName || 'Setup';
+}
+function saveSettings() {
+  STATE.settings.eventName = document.getElementById('set-event-name').value.trim() || 'Sports Day';
+  STATE.settings.eventDate = document.getElementById('set-event-date').value.trim();
+  STATE.settings.currency  = document.getElementById('set-currency').value.trim() || '£';
+  STATE.settings.rakePct   = parseFloat(document.getElementById('set-rake').value) || 0;
+  saveState();
+  renderSettingsForm();
+  showToast('Settings saved');
+}
+
+// ============================================================
+//  SETUP — HOUSES
+// ============================================================
+function renderHousesEditor() {
+  const el = document.getElementById('houses-editor');
+  el.innerHTML = STATE.houses.map(h => `
+    <div class="field-row" style="align-items:center">
+      <input type="color" value="${h.color}" oninput="updateHouse('${h.id}','color',this.value)" style="width:38px;height:38px;flex-shrink:0;border:none;background:none;border-radius:8px;padding:0">
+      <div class="field" style="margin-bottom:0"><input type="text" value="${escapeHtml(h.name)}" oninput="updateHouse('${h.id}','name',this.value)"></div>
+    </div>`).join('<div style="height:8px"></div>');
+}
+function updateHouse(id, key, val) {
+  const h = houseById(id); if (!h) return;
+  h[key] = val; saveState();
+  if (key === 'name') { renderKidHouseSelect(); renderKidsList(); renderRacesList(); }
+}
+
+// ============================================================
+//  SETUP — KIDS ROSTER
+// ============================================================
+function renderKidHouseSelect() {
+  const sel = document.getElementById('kid-add-house');
+  sel.innerHTML = STATE.houses.map(h => `<option value="${h.id}">${escapeHtml(h.name)}</option>`).join('');
+}
+function importKids() {
+  const raw = document.getElementById('kids-bulk').value;
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  let imported = 0; const errors = [];
+  lines.forEach(line => {
+    const parts = line.split(',');
+    if (parts.length < 2) { errors.push(line); return; }
+    const name = parts[0].trim();
+    const houseName = parts.slice(1).join(',').trim();
+    const house = STATE.houses.find(h => h.name.toLowerCase() === houseName.toLowerCase());
+    if (!name || !house) { errors.push(line); return; }
+    STATE.kids.push({ id: uid(), name, houseId: house.id });
+    imported++;
+  });
+  saveState();
+  document.getElementById('kids-bulk').value = '';
+  const status = document.getElementById('kids-import-status');
+  status.className = errors.length ? 'status-msg err' : 'status-msg';
+  status.textContent = `Imported ${imported}.` + (errors.length ? ` ${errors.length} line(s) skipped (house not recognised): ${errors.slice(0,3).join(' | ')}${errors.length>3?'…':''}` : '');
+  renderKidsList();
+  showToast(`Imported ${imported} kids`);
+}
+function addKid() {
+  const name = document.getElementById('kid-add-name').value.trim();
+  const houseId = document.getElementById('kid-add-house').value;
+  if (!name) { showToast('Enter a name', true); return; }
+  STATE.kids.push({ id: uid(), name, houseId });
+  saveState();
+  document.getElementById('kid-add-name').value = '';
+  renderKidsList();
+}
+function deleteKid(id) {
+  if (STATE.bets.some(b => b.marketKind === 'kid' && b.selectionId === id)) {
+    showToast('Cannot remove — kid has bets placed', true); return;
+  }
+  STATE.kids = STATE.kids.filter(k => k.id !== id);
+  STATE.races.forEach(r => { r.entrantIds = r.entrantIds.filter(e => e !== id); });
+  saveState();
+  renderKidsList();
+}
+let kidsHouseFilter = 'all';
+function renderKidsHouseFilterChips() {
+  const el = document.getElementById('kids-house-filter');
+  el.innerHTML = `<span class="chip ${kidsHouseFilter==='all'?'active':''}" onclick="setKidsHouseFilter('all')">All</span>` +
+    STATE.houses.map(h => `<span class="chip ${kidsHouseFilter===h.id?'active':''}" onclick="setKidsHouseFilter('${h.id}')">${escapeHtml(h.name)}</span>`).join('');
+}
+function setKidsHouseFilter(id) { kidsHouseFilter = id; renderKidsList(); }
+function renderKidsList() {
+  document.getElementById('kids-count').textContent = STATE.kids.length;
+  renderKidsHouseFilterChips();
+  const q = (document.getElementById('kids-search').value || '').toLowerCase();
+  const list = document.getElementById('kids-list');
+  let kids = STATE.kids;
+  if (kidsHouseFilter !== 'all') kids = kids.filter(k => k.houseId === kidsHouseFilter);
+  if (q) kids = kids.filter(k => k.name.toLowerCase().includes(q));
+  if (!kids.length) { list.innerHTML = '<div class="empty-state" style="padding:20px"><p>No kids match.</p></div>'; return; }
+  list.innerHTML = kids.map(k => {
+    const h = houseById(k.houseId);
+    return `<div class="list-row">
+      <span class="house-dot" style="background:${h?h.color:'#666'}"></span>
+      <span class="grow name">${escapeHtml(k.name)}</span>
+      <span class="sub">${h?escapeHtml(h.name):'—'}</span>
+      <button class="btn btn-ghost btn-sm" onclick="deleteKid('${k.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+//  SETUP — PARENTS
+// ============================================================
+function importParents() {
+  const raw = document.getElementById('parents-bulk').value;
+  const names = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  names.forEach(name => STATE.parents.push({ id: uid(), name }));
+  saveState();
+  document.getElementById('parents-bulk').value = '';
+  renderParentsList();
+  showToast(`Imported ${names.length} parents`);
+}
+function addParent() {
+  const name = document.getElementById('parent-add-name').value.trim();
+  if (!name) { showToast('Enter a name', true); return; }
+  STATE.parents.push({ id: uid(), name });
+  saveState();
+  document.getElementById('parent-add-name').value = '';
+  renderParentsList();
+}
+function deleteParent(id) {
+  if (STATE.bets.some(b => b.marketKind === 'parent' && b.selectionId === id)) {
+    showToast('Cannot remove — parent has bets placed', true); return;
+  }
+  STATE.parents = STATE.parents.filter(p => p.id !== id);
+  STATE.races.forEach(r => { r.entrantIds = r.entrantIds.filter(e => e !== id); });
+  saveState();
+  renderParentsList();
+}
+function renderParentsList() {
+  const list = document.getElementById('parents-list');
+  if (!STATE.parents.length) { list.innerHTML = '<div class="empty-state" style="padding:20px"><p>No parent entrants yet.</p></div>'; return; }
+  list.innerHTML = STATE.parents.map(p => `<div class="list-row">
+    <span class="grow name">${escapeHtml(p.name)}</span>
+    <button class="btn btn-ghost btn-sm" onclick="deleteParent('${p.id}')">✕</button>
+  </div>`).join('');
+}
+
+// ============================================================
+//  SETUP — RACES
+// ============================================================
+function onRaceTypeChange() {
+  const type = document.getElementById('race-type').value;
+  const el = document.getElementById('race-entrant-picker');
+  if (type === 'houseTeam') {
+    el.innerHTML = `<div class="field"><label>Entrants</label><div style="font-size:12px;color:var(--text-sec)">All 4 houses compete automatically.</div></div>`;
+    return;
+  }
+  const items = type === 'individual' ? STATE.kids : STATE.parents;
+  const isKids = type === 'individual';
+  el.innerHTML = `
+    <div class="field">
+      <label>Entrants</label>
+      ${isKids ? `<input class="search-input" id="race-pick-search" placeholder="Search…" oninput="renderRacePicker()">` : ''}
+      <div class="checklist" id="race-pick-list"></div>
+    </div>`;
+  renderRacePicker();
+}
+function renderRacePicker() {
+  const type = document.getElementById('race-type').value;
+  const isKids = type === 'individual';
+  const items = isKids ? STATE.kids : STATE.parents;
+  const q = isKids ? (document.getElementById('race-pick-search')?.value || '').toLowerCase() : '';
+  const filtered = q ? items.filter(i => i.name.toLowerCase().includes(q)) : items;
+  const listEl = document.getElementById('race-pick-list');
+  if (!filtered.length) { listEl.innerHTML = `<div style="padding:10px;font-size:12px;color:var(--text-dim)">No ${isKids?'kids':'parents'} added yet — add them above first.</div>`; return; }
+  listEl.innerHTML = filtered.map(i => {
+    const h = isKids ? houseById(i.houseId) : null;
+    return `<label><input type="checkbox" class="race-entrant-cb" value="${i.id}"> ${escapeHtml(i.name)}${h?` <span style="color:${h.color}">· ${escapeHtml(h.name)}</span>`:''}</label>`;
+  }).join('');
+}
+function addRace() {
+  const name = document.getElementById('race-name').value.trim();
+  const type = document.getElementById('race-type').value;
+  if (!name) { showToast('Enter a race name', true); return; }
+  let entrantIds;
+  if (type === 'houseTeam') {
+    entrantIds = STATE.houses.map(h => h.id);
+  } else {
+    entrantIds = Array.from(document.querySelectorAll('.race-entrant-cb:checked')).map(cb => cb.value);
+    if (entrantIds.length < 2) { showToast('Select at least 2 entrants', true); return; }
+  }
+  STATE.races.push({ id: uid(), name, type, entrantIds, locked: false, result: null });
+  saveState();
+  document.getElementById('race-name').value = '';
+  onRaceTypeChange();
+  renderRacesList();
+  showToast('Race added');
+}
+function deleteRace(id) {
+  const race = raceById(id);
+  if (!race || race.locked) return;
+  if (STATE.bets.some(b => b.marketId === id)) { showToast('Cannot remove — race has bets placed', true); return; }
+  STATE.races = STATE.races.filter(r => r.id !== id);
+  saveState();
+  renderRacesList();
+}
+function raceTypeLabel(t) { return t==='individual'?'Individual':t==='houseTeam'?'House Team':t==='parent'?'Parent Race':'Overall'; }
+function renderRacesList() {
+  const el = document.getElementById('races-list');
+  el.innerHTML = STATE.races.map(r => {
+    const entrants = r.entrantIds.map(id => {
+      if (r.type === 'individual') return kidById(id)?.name;
+      if (r.type === 'parent') return parentById(id)?.name;
+      return houseById(id)?.name;
+    }).filter(Boolean).join(', ');
+    return `<div class="list-row" style="align-items:flex-start">
+      <div class="grow">
+        <div class="name">${escapeHtml(r.name)} <span class="pill pill-dim" style="margin-left:4px">${raceTypeLabel(r.type)}</span>${r.result?' <span class="pill pill-green">Settled</span>':''}</div>
+        <div class="sub">${escapeHtml(entrants || '—')}</div>
+      </div>
+      ${r.locked ? '' : `<button class="btn btn-ghost btn-sm" onclick="deleteRace('${r.id}')">✕</button>`}
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+//  SETUP — RENDER ALL
+// ============================================================
+function renderSetup() {
+  renderSettingsForm();
+  renderHousesEditor();
+  renderKidHouseSelect();
+  renderKidsList();
+  renderParentsList();
+  onRaceTypeChange();
+  renderRacesList();
+}
+
+// ============================================================
+//  DATA — EXPORT / IMPORT / RESET
+// ============================================================
+function exportData() {
+  const blob = new Blob([JSON.stringify(STATE, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `sportsday-backup-${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Backup exported');
+}
+function importData(evt) {
+  const file = evt.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed.houses || !parsed.races) throw new Error('bad file');
+      if (!confirm('This will replace all current data with the imported backup. Continue?')) return;
+      STATE = parsed; saveState(); renderSetup();
+      showToast('Backup imported');
+    } catch(e) { showToast('Invalid backup file', true); }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+function resetAllData() {
+  if (!confirm('This permanently deletes all houses, kids, races and bets. Continue?')) return;
+  if (!confirm('Are you absolutely sure? This cannot be undone.')) return;
+  STATE = defaultState(); saveState(); renderSetup();
+  showToast('All data reset');
+}
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+// ============================================================
+//  MARKETS — shared helpers
+// ============================================================
+function getSubMarkets(race) {
+  if (race.type === 'overall')   return [{ kind:'house',  label:'🏆 Overall Champion', options: race.entrantIds.map(id=>({id,label:houseById(id)?.name})) }];
+  if (race.type === 'houseTeam') return [{ kind:'house',  label: race.name + ' — House Winner', options: race.entrantIds.map(id=>({id,label:houseById(id)?.name})) }];
+  if (race.type === 'parent')    return [{ kind:'parent', label: race.name + ' — Winner', options: race.entrantIds.map(id=>({id,label:parentById(id)?.name})) }];
+  return [
+    { kind:'house', label: race.name + ' — House Winner', options: [...new Set(race.entrantIds.map(id=>kidById(id)?.houseId))].filter(Boolean).map(id=>({id,label:houseById(id)?.name})) },
+    { kind:'kid',   label: race.name + ' — Kid Winner',   options: race.entrantIds.map(id=>({id,label: kidById(id) ? `${kidById(id).name} (${houseById(kidById(id).houseId)?.name})` : null})).filter(o=>o.label) },
+  ];
+}
+function selectionLabel(kind, id) {
+  if (kind === 'house')  return houseById(id)?.name  || '—';
+  if (kind === 'kid')    return kidById(id)?.name     || '—';
+  if (kind === 'parent') return parentById(id)?.name  || '—';
+  return '—';
+}
+
+// ============================================================
+//  BET SCREEN
+// ============================================================
+function renderBet() {
+  const sel = document.getElementById('bet-race');
+  sel.innerHTML = STATE.races.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+  refreshBettorNames();
+  onBetRaceChange();
+}
+function currentBetMarket() {
+  const raceId = document.getElementById('bet-race').value;
+  const race = raceById(raceId);
+  if (!race) return null;
+  const subs = getSubMarkets(race);
+  const kindBtns = document.querySelectorAll('#bet-kind-toggle button');
+  let kind = subs[0].kind;
+  const activeBtn = document.querySelector('#bet-kind-toggle button.active');
+  if (activeBtn) kind = activeBtn.dataset.kind;
+  const sub = subs.find(s => s.kind === kind) || subs[0];
+  return { race, sub };
+}
+function onBetRaceChange() {
+  const raceId = document.getElementById('bet-race').value;
+  const race = raceById(raceId);
+  const toggle = document.getElementById('bet-kind-toggle');
+  if (!race) return;
+  const subs = getSubMarkets(race);
+  if (subs.length > 1) {
+    toggle.style.display = 'flex';
+    toggle.innerHTML = subs.map((s,i) => `<button class="${i===0?'active':''}" data-kind="${s.kind}" onclick="onBetKindChange(this)">${s.kind==='house'?'House Winner':'Kid Winner'}</button>`).join('');
+  } else {
+    toggle.style.display = 'none'; toggle.innerHTML = '';
+  }
+  populateBetSelection();
+}
+function onBetKindChange(btn) {
+  document.querySelectorAll('#bet-kind-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  populateBetSelection();
+}
+function populateBetSelection() {
+  const m = currentBetMarket();
+  const sel = document.getElementById('bet-selection');
+  if (!m || !m.sub.options.length) { sel.innerHTML = '<option value="">No entrants yet</option>'; renderPoolPreview(); return; }
+  sel.innerHTML = m.sub.options.map(o => `<option value="${o.id}">${escapeHtml(o.label)}</option>`).join('');
+  renderPoolPreview();
+}
+function placeBet() {
+  const m = currentBetMarket();
+  const status = document.getElementById('bet-status');
+  status.className = 'status-msg';
+  if (!m || !m.sub.options.length) { status.className='status-msg err'; status.textContent='No valid selection available.'; return; }
+  const selectionId = document.getElementById('bet-selection').value;
+  const bettor = document.getElementById('bet-bettor').value.trim();
+  const stake = parseFloat(document.getElementById('bet-stake').value);
+  if (!bettor) { status.className='status-msg err'; status.textContent='Enter a bettor name.'; return; }
+  if (!(stake > 0)) { status.className='status-msg err'; status.textContent='Enter a stake greater than 0.'; return; }
+  if (m.race.result) { status.className='status-msg err'; status.textContent='This market is already settled.'; return; }
+  STATE.bets.push({ id: uid(), ts: Date.now(), marketId: m.race.id, marketKind: m.sub.kind, selectionId, bettor, stake: r2(stake), settled: false, payout: null });
+  saveState();
+  document.getElementById('bet-stake').value = '';
+  status.textContent = '';
+  showToast(`Bet placed: ${bettor} — ${fmtMoney(stake)} on ${selectionLabel(m.sub.kind, selectionId)}`);
+  refreshBettorNames();
+  renderPoolPreview();
+}
+function refreshBettorNames() {
+  const dl = document.getElementById('bettor-names');
+  const names = [...new Set(STATE.bets.map(b => b.bettor))];
+  dl.innerHTML = names.map(n => `<option value="${escapeHtml(n)}">`).join('');
+}
+function renderPoolPreview() {
+  const m = currentBetMarket();
+  const el = document.getElementById('pool-preview');
+  const listEl = document.getElementById('market-bets-list');
+  if (!m) { el.innerHTML = '<div class="empty-state" style="padding:16px"><p>No market selected.</p></div>'; return; }
+  const bets = STATE.bets.filter(b => b.marketId === m.race.id && b.marketKind === m.sub.kind);
+  const total = bets.reduce((a,b) => a+b.stake, 0);
+  if (!bets.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:16px"><p>No bets yet on <b>${escapeHtml(m.sub.label)}</b>.</p></div>`;
+  } else {
+    el.innerHTML = m.sub.options.map(o => {
+      const staked = bets.filter(b => b.selectionId === o.id).reduce((a,b)=>a+b.stake,0);
+      const pct = total ? (staked/total*100) : 0;
+      const odds = staked ? (total/staked) : 0;
+      return `<div class="pool-row">
+        <span class="pool-label">${escapeHtml(o.label)}</span>
+        <span class="pool-bar-bg"><span class="pool-bar-fill" style="width:${pct}%"></span></span>
+        <span class="pool-amt">${fmtMoney(staked)}</span>
+        <span class="pool-odds">${staked?odds.toFixed(2)+'x':'—'}</span>
+      </div>`;
+    }).join('') + `<div style="margin-top:8px;font-size:11px;color:var(--text-dim)">Total pool: ${fmtMoney(total)} · ${bets.length} bet(s)${m.race.result?' · SETTLED':''}</div>`;
+  }
+  if (!bets.length) { listEl.innerHTML = '<div class="empty-state" style="padding:16px"><p>—</p></div>'; return; }
+  listEl.innerHTML = [...bets].sort((a,b)=>b.ts-a.ts).slice(0,15).map(b => `
+    <div class="list-row">
+      <span class="grow name">${escapeHtml(b.bettor)}</span>
+      <span class="sub">${escapeHtml(selectionLabel(b.marketKind, b.selectionId))}</span>
+      <span class="pool-amt">${fmtMoney(b.stake)}</span>
+    </div>`).join('');
+}
+
+// ============================================================
+//  RESULTS SCREEN & SETTLEMENT
+// ============================================================
+function settlePoolBets(bets, winnerSelectionId, rakePct) {
+  const total = bets.reduce((a,b) => a+b.stake, 0);
+  const rake = Math.max(0, Math.min(100, rakePct)) / 100;
+  const payoutPool = total * (1 - rake);
+  const winners = bets.filter(b => b.selectionId === winnerSelectionId);
+  const winningStake = winners.reduce((a,b) => a+b.stake, 0);
+  bets.forEach(b => {
+    b.settled = true;
+    if (winningStake > 0) {
+      b.payout = b.selectionId === winnerSelectionId ? r2(b.stake / winningStake * payoutPool) : 0;
+    } else {
+      b.payout = b.stake; // nobody backed the winner — void, full refund
+    }
+  });
+  return { total, winningStake, rakeTaken: winningStake > 0 ? r2(total - payoutPool) : 0 };
+}
+function settleRace(raceId) {
+  const race = raceById(raceId);
+  const pickEl = document.getElementById('winner-pick-' + raceId);
+  const winnerId = pickEl.value;
+  if (!winnerId) { showToast('Choose a winner first', true); return; }
+  const rakePct = STATE.settings.rakePct;
+  const summary = {};
+  if (race.type === 'individual') {
+    const kid = kidById(winnerId);
+    if (!kid) return;
+    const kidBets = STATE.bets.filter(b => b.marketId === raceId && b.marketKind === 'kid');
+    const houseBets = STATE.bets.filter(b => b.marketId === raceId && b.marketKind === 'house');
+    summary.kid = settlePoolBets(kidBets, winnerId, rakePct);
+    summary.house = settlePoolBets(houseBets, kid.houseId, rakePct);
+    race.result = { kidId: winnerId, houseId: kid.houseId };
+  } else if (race.type === 'parent') {
+    const parentBets = STATE.bets.filter(b => b.marketId === raceId && b.marketKind === 'parent');
+    summary.parent = settlePoolBets(parentBets, winnerId, rakePct);
+    race.result = { parentId: winnerId };
+  } else {
+    const houseBets = STATE.bets.filter(b => b.marketId === raceId && b.marketKind === 'house');
+    summary.house = settlePoolBets(houseBets, winnerId, rakePct);
+    race.result = { houseId: winnerId };
+  }
+  saveState();
+  showToast(`${race.name} settled`);
+  renderResults();
+}
+function voidRace(raceId) {
+  const race = raceById(raceId);
+  if (!confirm(`Void "${race.name}"? All bets on this race will be fully refunded.`)) return;
+  STATE.bets.filter(b => b.marketId === raceId).forEach(b => { b.settled = true; b.payout = b.stake; });
+  race.result = { voided: true };
+  saveState();
+  showToast(`${race.name} voided — stakes refunded`);
+  renderResults();
+}
+function renderResults() {
+  const el = document.getElementById('results-list');
+  if (STATE.races.length === 0) { el.innerHTML = '<div class="empty-state"><p>No races yet — add some in Setup.</p></div>'; return; }
+  el.innerHTML = STATE.races.map(race => {
+    const subs = getSubMarkets(race);
+    let winnerOptions;
+    if (race.type === 'individual') winnerOptions = race.entrantIds.map(id => ({ id, label: kidById(id) ? `${kidById(id).name} (${houseById(kidById(id).houseId)?.name})` : null })).filter(o=>o.label);
+    else if (race.type === 'parent') winnerOptions = race.entrantIds.map(id => ({ id, label: parentById(id)?.name })).filter(o=>o.label);
+    else winnerOptions = race.entrantIds.map(id => ({ id, label: houseById(id)?.name }));
+    const currentWinner = race.result ? (race.result.kidId || race.result.houseId || race.result.parentId || '') : '';
+    const isVoided = race.result && race.result.voided;
+    const winnerIdBySubKind = { house: race.result?.houseId, kid: race.result?.kidId, parent: race.result?.parentId };
+    const poolsHtml = subs.map(s => {
+      const bets = STATE.bets.filter(b => b.marketId === race.id && b.marketKind === s.kind);
+      const total = bets.reduce((a,b)=>a+b.stake,0);
+      const winnerSelId = winnerIdBySubKind[s.kind];
+      const winningStake = winnerSelId ? bets.filter(b=>b.selectionId===winnerSelId).reduce((a,b)=>a+b.stake,0) : 0;
+      const noBackers = race.result && !isVoided && total > 0 && winningStake === 0;
+      return `<div style="margin-top:6px">
+        <div class="card-meta" style="margin-bottom:4px">${escapeHtml(s.label)} · pool ${fmtMoney(total)} · ${bets.length} bet(s)${noBackers?' · no bets on the winner — refunded':''}</div>
+        ${s.options.map(o => {
+          const staked = bets.filter(b=>b.selectionId===o.id).reduce((a,b)=>a+b.stake,0);
+          const won = race.result && !isVoided && !noBackers && o.id === winnerSelId;
+          return `<div class="pool-row"><span class="pool-label">${escapeHtml(o.label)}${won?' <span class=\"pill pill-green\">Won</span>':''}</span><span class="pool-amt">${fmtMoney(staked)}</span></div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+    return `<div class="card">
+      <div class="card-header">
+        <span class="card-title">${escapeHtml(race.name)}</span>
+        <span class="pill pill-dim">${raceTypeLabel(race.type)}</span>
+      </div>
+      <div class="card-body">
+        ${winnerOptions.length ? `
+        <div class="field-row" style="align-items:flex-end">
+          <div class="field" style="margin-bottom:0">
+            <label>Winner</label>
+            <select id="winner-pick-${race.id}">
+              <option value="">— select —</option>
+              ${winnerOptions.map(o => `<option value="${o.id}" ${o.id===currentWinner?'selected':''}>${escapeHtml(o.label)}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn btn-sm" style="flex-shrink:0" onclick="settleRace('${race.id}')">${race.result?'Re-settle':'Settle'}</button>
+          ${race.locked ? '' : `<button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="voidRace('${race.id}')">Void</button>`}
+        </div>` : `<div class="card-meta">Add entrants in Setup before this can be settled.</div>`}
+        ${isVoided ? '<div class="pill pill-red" style="margin-top:8px">VOIDED — stakes refunded</div>' : ''}
+        ${poolsHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+//  LEDGER SCREEN
+// ============================================================
+function renderLedger() {
+  const bettors = {};
+  STATE.bets.forEach(b => {
+    if (!bettors[b.bettor]) bettors[b.bettor] = { settledStaked:0, settledReturn:0, pendingStaked:0 };
+    if (b.settled) { bettors[b.bettor].settledStaked += b.stake; bettors[b.bettor].settledReturn += (b.payout||0); }
+    else { bettors[b.bettor].pendingStaked += b.stake; }
+  });
+  const rows = Object.entries(bettors).map(([name, v]) => ({
+    name, ...v, net: r2(v.settledReturn - v.settledStaked)
+  })).sort((a,b) => b.net - a.net);
+
+  const totalStaked = STATE.bets.reduce((a,b)=>a+b.stake,0);
+  const totalSettled = STATE.bets.filter(b=>b.settled).length;
+  document.getElementById('ledger-sub').textContent = `${STATE.bets.length} bets · ${fmtMoney(totalStaked)} total staked · ${totalSettled} settled`;
+
+  const tbl = document.getElementById('ledger-table');
+  if (!rows.length) { tbl.innerHTML = '<div class="empty-state" style="padding:20px"><p>No bets placed yet.</p></div>'; }
+  else {
+    tbl.innerHTML = `<table class="ledger">
+      <tr><th>Bettor</th><th>Staked</th><th>Returned</th><th>Net</th><th>Pending</th></tr>
+      ${rows.map(r => `<tr>
+        <td>${escapeHtml(r.name)}</td>
+        <td class="num">${fmtMoney(r.settledStaked)}</td>
+        <td class="num">${fmtMoney(r.settledReturn)}</td>
+        <td class="num ${r.net>0?'net-pos':r.net<0?'net-neg':''}">${r.net>0?'+':''}${fmtMoney(r.net)}</td>
+        <td class="num">${r.pendingStaked?fmtMoney(r.pendingStaked):'—'}</td>
+      </tr>`).join('')}
+    </table>`;
+  }
+  renderBetLog();
+}
+function renderBetLog() {
+  const q = (document.getElementById('log-search').value || '').toLowerCase();
+  let bets = [...STATE.bets].sort((a,b) => b.ts - a.ts);
+  if (q) bets = bets.filter(b => b.bettor.toLowerCase().includes(q));
+  const tbl = document.getElementById('bet-log-table');
+  if (!bets.length) { tbl.innerHTML = '<tr><td style="padding:10px;color:var(--text-dim)">No bets found.</td></tr>'; return; }
+  tbl.innerHTML = `<tr><th>Bettor</th><th>Market</th><th>Pick</th><th>Stake</th><th>Status</th></tr>` +
+    bets.map(b => {
+      const race = raceById(b.marketId);
+      const marketLabel = race ? (race.type==='individual' ? `${race.name} (${b.marketKind})` : race.name) : '—';
+      const statusLabel = !b.settled ? '<span class="pill pill-gold">Open</span>' : (b.payout>0 ? `<span class="pill pill-green">+${fmtMoney(b.payout)}</span>` : '<span class="pill pill-red">Lost</span>');
+      return `<tr>
+        <td>${escapeHtml(b.bettor)}</td>
+        <td>${escapeHtml(marketLabel)}</td>
+        <td>${escapeHtml(selectionLabel(b.marketKind, b.selectionId))}</td>
+        <td class="num">${fmtMoney(b.stake)}</td>
+        <td>${statusLabel}</td>
+      </tr>`;
+    }).join('');
+}
+function exportLedgerCsv() {
+  const rows = [['Bettor','Staked','Returned','Net','Pending']];
+  const bettors = {};
+  STATE.bets.forEach(b => {
+    if (!bettors[b.bettor]) bettors[b.bettor] = { settledStaked:0, settledReturn:0, pendingStaked:0 };
+    if (b.settled) { bettors[b.bettor].settledStaked += b.stake; bettors[b.bettor].settledReturn += (b.payout||0); }
+    else { bettors[b.bettor].pendingStaked += b.stake; }
+  });
+  Object.entries(bettors).forEach(([name,v]) => rows.push([name, r2(v.settledStaked), r2(v.settledReturn), r2(v.settledReturn-v.settledStaked), r2(v.pendingStaked)]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `sportsday-ledger-${todayStr()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+//  UTIL
+// ============================================================
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+loadState();
+renderSetup();
+</script>
+</body>
+</html>
